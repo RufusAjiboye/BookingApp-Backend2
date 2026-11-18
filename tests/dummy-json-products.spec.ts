@@ -5,7 +5,7 @@ test.describe('Dummy JSON Products API Tests', () => {
   let access_token = ""; // Replace with your actual access token if required
   test.beforeAll(async ({ clientApi }) => {
 
-    let response = await clientApi.makeRequest({
+    const response = await clientApi.makeRequest({
       method: 'POST',
       endpoint: '/auth/login',
       body: {

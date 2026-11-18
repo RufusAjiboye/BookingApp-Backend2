@@ -8,8 +8,8 @@ export interface ApiRequestOptions {
   endpoint: string;
   method: ApiRequestMethod['method'];
   headers?: Record<string, string>;
-  body?: Record<string, any>;
-  params?: Record<string, any>;
+  body?: Record<string, unknown>;
+  params?: Record<string, unknown>;
 };
 
 export class ClientApi {

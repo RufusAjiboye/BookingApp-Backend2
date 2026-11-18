@@ -4,15 +4,25 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "playwright test --config=playwright.config.ts",
     "test:example": "playwright test tests/example.spec.ts --config=playwright.config.ts",
+    "test:carts": "playwright test tests/carts.spec.ts --config=playwright.config.ts",
+    "test:get-a-recipe": "playwright test tests/get-a-recipe.spec.ts --config=playwright.config.ts",
+    "test:vegetarian": "playwright test tests/vegetarian-stir-fry.spec.ts --config=playwright.config.ts",
+    "test:get-all-products": "playwright test tests/get-all-products.spec.ts --config=playwright.config.ts",
     "test:json-products": "playwright test tests/dummy-json-products.spec.ts --config=playwright.config.ts",
     "test:ci": "playwright test --config=playwright.config.ts --workers=1"
   },
   "keywords": [],
   "type": "commonjs",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.0",
-    "@types/node": "^26.6.6"
+    "@types/node": "^26.6.6",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "typescript-eslint": "^8.73.0"
   }
 }
