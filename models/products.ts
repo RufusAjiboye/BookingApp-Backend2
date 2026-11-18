@@ -43,3 +43,8 @@ export interface Product {
   images: string[];
   thumbnail: string;
 }
+
+// Her name is Mrs Awodi
+
+//Her second name Bukky Italian Omo Ibadan Oniro AsyncResource, ore Oko Nike Adedeji
+
