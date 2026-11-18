@@ -43,3 +43,6 @@ export interface Product {
   images: string[];
   thumbnail: string;
 }
+
+
+//My name is Awodi
