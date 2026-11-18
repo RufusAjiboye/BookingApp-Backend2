@@ -44,5 +44,5 @@ export interface Product {
   thumbnail: string;
 }
 
+// Her name is Mrs Awodi
 
-//My name is Awodi
