@@ -14,8 +14,7 @@ trigger:
     include:
       - main
 
-# Azure Repos Git requires a Build Validation branch policy for PR validation.
-# This PR filter is retained for portability to GitHub.
+# Azure Repos requires a Build Validation branch policy for pull requests.
 pr:
   branches:
     include:
@@ -38,81 +37,66 @@ stages:
     jobs:
       - job: Lint
         steps:
-          - checkout: self
           - task: NodeTool@0
             inputs:
               versionSpec: '20.x'
-            displayName: Use Node.js 20
-          - script: |
-              npm ci
-              npm run lint
+          - script: npm ci && npm run lint
             displayName: Install dependencies and lint
 
-  - stage: Test
-    displayName: Playwright tests
+  - stage: ApiTests
+    displayName: Backend API tests
     dependsOn: Lint
     jobs:
-      - job: Playwright
+      - job: RunTests
         displayName: Run API tests
         steps:
-          - checkout: self
           - task: NodeTool@0
             inputs:
               versionSpec: '20.x'
-            displayName: Use Node.js 20
           - script: npm ci
             displayName: Install dependencies
 
-          # Define BASE_URL_DEV, BASE_URL_STG, BASE_URL_UAT, BASE_URL_PROD,
-          # DUMMYJSON_USERNAME, and DUMMYJSON_PASSWORD as pipeline variables.
+          # Set these in pipeline variables or link a variable group.
           - bash: |
               case "$TARGET_ENV" in
-                dev) base_url="$BASE_URL_DEV" ;;
-                stg) base_url="$BASE_URL_STG" ;;
-                uat) base_url="$BASE_URL_UAT" ;;
-                prod) base_url="$BASE_URL_PROD" ;;
-                *)
-                  echo "Unsupported test environment: $TARGET_ENV"
-                  exit 1
-                  ;;
+                dev) base_url="$BASE_URL_DEV"; variable_name="BASE_URL_DEV" ;;
+                stg) base_url="$BASE_URL_STG"; variable_name="BASE_URL_STG" ;;
+                uat) base_url="$BASE_URL_UAT"; variable_name="BASE_URL_UAT" ;;
+                prod) base_url="$BASE_URL_PROD"; variable_name="BASE_URL_PROD" ;;
+                *) echo "Unsupported environment: $TARGET_ENV"; exit 1 ;;
               esac
 
               if [[ -z "$base_url" || "$base_url" == '$('* ]]; then
-                echo "Set the BASE_URL_$TARGET_ENV pipeline variable before running tests."
+                echo "Set $variable_name in pipeline variables."
                 exit 1
               fi
 
-              echo "##vso[task.setvariable variable=BASE_URL]$base_url"
-              echo "Selected test environment: $TARGET_ENV"
-            displayName: Select test environment
+              BASE_URL="$base_url" npm run test:ci -- --reporter=list,allure-playwright,json
+            displayName: Run API tests
             env:
               TARGET_ENV: ${{ parameters.environment }}
               BASE_URL_DEV: $(BASE_URL_DEV)
               BASE_URL_STG: $(BASE_URL_STG)
               BASE_URL_UAT: $(BASE_URL_UAT)
               BASE_URL_PROD: $(BASE_URL_PROD)
-
-          - bash: |
-              set +e
-              npm run test:ci -- --reporter=list,allure-playwright,json
-              test_exit_code=$?
-              echo "##vso[task.setvariable variable=playwrightExitCode]$test_exit_code"
-              exit 0
-            displayName: Run Playwright tests
-            env:
-              BASE_URL: $(BASE_URL)
-              CI: 'true'
               DUMMYJSON_USERNAME: $(DUMMYJSON_USERNAME)
               DUMMYJSON_PASSWORD: $(DUMMYJSON_PASSWORD)
+              CI: 'true'
               PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-report.json
 
-          - bash: npx allure generate allure-results --clean --output allure-report
+          - bash: |
+              if find allure-results -type f -print -quit 2>/dev/null | grep -q .; then
+                npx allure generate allure-results --clean --output allure-report || exit $?
+                echo "##vso[task.setvariable variable=allureReportGenerated]true"
+              else
+                echo "No tests ran; skipping Allure report generation."
+              fi
             displayName: Generate Allure report
             condition: always()
 
           - task: PublishPipelineArtifact@1
             displayName: Publish Allure report
-            condition: always()
+            condition: and(always(), eq(variables['allureReportGenerated'], 'true'))
             inputs:
               targetPath: allure-report
               artifactName: allure-report
@@ -125,14 +109,3 @@ stages:
             condition: always()
             env:
               TARGET_ENV: ${{ parameters.environment }}
-
-          - bash: |
-              if [[ ! "$PLAYWRIGHT_EXIT_CODE" =~ ^[0-9]+$ ]]; then
-                echo "Playwright did not produce an exit code."
-                exit 1
-              fi
-              exit "$PLAYWRIGHT_EXIT_CODE"
-            displayName: Set pipeline result from tests
-            condition: always()
-            env:
-              PLAYWRIGHT_EXIT_CODE: $(playwrightExitCode)
