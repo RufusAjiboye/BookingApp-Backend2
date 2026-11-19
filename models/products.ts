@@ -44,5 +44,3 @@ export interface Product {
   thumbnail: string;
 }
 
-// Her name is Mrs Awodi
-
