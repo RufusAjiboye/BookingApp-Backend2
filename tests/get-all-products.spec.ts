@@ -20,7 +20,7 @@ import { Product } from '../models/products.ts';
 
     const gucciProducts = productDetails.products.find((x: Product) => x.brand ==='Gucci');
     const mgucciProducts = productDetails.products.find((x: Product) => x.price === 9.99);
-    console.log(gucciProducts['returnPolicy']);
+    console.log(gucciProducts.returnPolicy);
     console.log(gucciProducts['price']);
 
     //API reponse interrogation
