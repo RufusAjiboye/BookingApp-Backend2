@@ -1,23 +1,19 @@
 import { test, expect } from '../fixture/api-fixture.ts';
-test('get a product', async ({ clientApi }) => {
-    const recipeId = 2; // Replace with the actual product ID you want to retrieve
-    const expectedTags = ['Vegetarina, Stir-fry, Asian']
+import { Recipe } from '../models/recipes.ts';
 
-    // Example API request using the clientApi
-    const response = await clientApi.makeRequest({
-      method: 'GET',
-      endpoint: `/products/${recipeId}`,
-      headers: {
-        'authorization': 'Bearer ${access_token}'
-      }
-    });
-    
-    expect(response.status()).toBe(200);
-    const recipeDetails = await response.json()
+test('get vegetarian stir-fry recipe', async ({ clientApi }) => {
+  const recipeId = 2;
+  const expectedTags = ['Vegetarian', 'Stir-fry', 'Asian'];
 
-    const actualtags = recipeDetails.tags;
-    expect(actualtags).toEqual(expectedTags);
+  const response = await clientApi.makeRequest({
+    method: 'GET',
+    endpoint: `/recipes/${recipeId}`,
+  });
 
-    //console.log('recipeDetails:', expectedTags);
-  
- });
+  expect(response.status()).toBe(200);
+  const recipeDetails = await response.json() as Recipe;
+
+  expect(recipeDetails.id).toBe(recipeId);
+  expect(recipeDetails.name).toBe('Vegetarian Stir-Fry');
+  expect(recipeDetails.tags).toEqual(expectedTags);
+});
