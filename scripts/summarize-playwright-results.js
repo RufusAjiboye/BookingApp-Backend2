@@ -5,11 +5,10 @@ const fs = require('node:fs');
 const reportPath = process.argv[2] || 'test-results/playwright-report.json';
 const summaryPath = process.argv[3] || 'test-summary.md';
 
-if (!fs.existsSync(reportPath)) {
-  throw new Error(`Playwright JSON report not found: ${reportPath}`);
-}
-
-const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+const reportExists = fs.existsSync(reportPath);
+const report = reportExists
+  ? JSON.parse(fs.readFileSync(reportPath, 'utf8'))
+  : { suites: [] };
 const counts = { total: 0, passed: 0, skipped: 0, failed: 0 };
 const failures = [];
 
@@ -58,6 +57,9 @@ const lines = [
   '',
   `Environment: ${process.env.TARGET_ENV || 'not specified'}`,
   '',
+  ...(!reportExists
+    ? ['No Playwright report was produced; check the API test step.', '']
+    : []),
   '| Outcome | Count |',
   '| --- | ---: |',
   `| Total | ${counts.total} |`,
