@@ -1,0 +1,107 @@
+name: API Regression Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to test
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - stg
+          - uat
+          - prod
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  test:
+    name: API tests
+    needs: lint
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    env:
+      CI: 'true'
+      TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
+      BASE_URL: ${{ vars.BASE_URL }}
+      DUMMYJSON_USERNAME: ${{ secrets.DUMMYJSON_USERNAME }}
+      DUMMYJSON_PASSWORD: ${{ secrets.DUMMYJSON_PASSWORD }}
+      PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/playwright-report.json
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate environment configuration
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            echo "::error::Set the BASE_URL variable in the '${TARGET_ENV}' GitHub Environment."
+            exit 1
+          fi
+
+      - name: Run Playwright tests
+        run: |
+          mkdir -p test-results
+          npm run test:ci -- --reporter=list,allure-playwright,json
+
+      - name: Generate Allure report
+        if: always()
+        run: |
+          if [ -d allure-results ] && find allure-results -type f -print -quit | grep -q .; then
+            npx allure generate allure-results --clean --output allure-report
+          else
+            echo "No Allure results were produced."
+          fi
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ github.run_number }}
+          path: allure-report/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Publish test summary
+        if: always()
+        run: |
+          node scripts/summarize-playwright-results.js test-results/playwright-report.json test-summary.md \
+            | tee -a "$GITHUB_STEP_SUMMARY"
