@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: Environment to test
+        description: Environment to test project
         type: choice
         required: true
         default: dev
