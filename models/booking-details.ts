@@ -12,3 +12,4 @@ export interface BookingDetails {
 }
 
 // bookingdates: BookingDates;
+// bookingdates: BookingDates;
