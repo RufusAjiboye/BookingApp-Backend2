@@ -1,5 +1,5 @@
 parameters:
-  - name: environment
+  - name: Environment
     displayName: Test environment
     type: string
     default: dev
