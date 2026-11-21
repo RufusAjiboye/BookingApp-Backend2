@@ -10,3 +10,5 @@ export interface BookingDetails {
   depositpaid: boolean;
   bookingdates: BookingDates;
 }
+
+// bookingdates: BookingDates;
