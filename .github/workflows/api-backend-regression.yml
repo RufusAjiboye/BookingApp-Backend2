@@ -1,4 +1,4 @@
-name: API Regression Tests
+name: API Backend Regression Tests
 
 on:
   workflow_dispatch:
@@ -15,10 +15,10 @@ on:
           - prod
   pull_request:
     branches:
-      - main
+      - develop
   push:
     branches:
-      - main
+      - develop
   schedule:
     - cron: '0 * * * *'
 
