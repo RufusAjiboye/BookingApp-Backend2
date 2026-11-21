@@ -43,8 +43,9 @@ test.describe('Dummy JSON Products API Tests', () => {
     expect(productDetails.price).toBe(799.99);
     expect(productDetails.brand).toBe("Bath Trends");
  });
-
 });
+
+
 
 
 
