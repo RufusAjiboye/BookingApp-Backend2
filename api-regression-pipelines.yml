@@ -101,6 +101,7 @@ stages:
               targetPath: allure-report
               artifactName: allure-report
               publishLocation: pipeline
+              //publishLocation: pipeline
 
           - bash: |
               node scripts/summarize-playwright-results.js test-results/playwright-report.json test-summary.md
